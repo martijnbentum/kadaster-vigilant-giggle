@@ -7,6 +7,7 @@ no_stamp = scans + 'no_stamp/'
 with_note = scans + 'with_note/'
 no_note = scans + 'no_note/'
 
+pickle = base + 'kadaster_pickle/'
 
 no_stamp_files = glob.glob(no_stamp + '*.jpg')
 with_stamp_files = glob.glob(with_stamp + '*.jpg')
