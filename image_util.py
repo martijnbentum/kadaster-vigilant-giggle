@@ -62,4 +62,15 @@ def show_image_with_rectangle(image, rectangle):
     plt.imshow(img)
     plt.show()
     
+
+def crop_with_rectangle(image, rectangle = None, default_height = 600):
+    print(image,rectangle)
+    if not rectangle: return image[:default_height]
+    x, y, w, h = rectangle
+    cropped_image = image[y:y+h, x:x+w]
+    return cropped_image
+
+def to_color_image(image):
+    return cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+
     
