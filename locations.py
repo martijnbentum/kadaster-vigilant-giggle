@@ -35,4 +35,4 @@ all_kraken_files =  kraken_with_note_files + kraken_no_note_files
 all_kraken_files +=  kraken_with_stamp_files + kraken_no_stamp_files
 
 
-
+haarlem = base + 'haarlem/'
