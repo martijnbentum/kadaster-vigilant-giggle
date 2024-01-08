@@ -98,48 +98,77 @@ def crop_with_rectangle(image, rectangle = None, default_height = 600):
 def to_color_image(image):
     return cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
-def _crop_with_central_rectangle(image, central_rectangle, adjust_x = 0):
-    x, y, w, h = central_rectangle
-    middle = int(x + w/2) - adjust_x
-    print(middle,x, w, adjust_x)
+def _split_pages(image, middle):
     left_page = image[:, 0:middle]
     right_page = image[:, middle:]
     return left_page, right_page 
 
-def find_two_page_rectangle(ar,hr,wr, image):
-    h, w = image.shape
-    biggest = ar[-1]
-    heighest = hr[-1]
-    widest = wr[-1]
-    if heighest[3] < 0.9 * h: 
-        print('Warning: heighest rectangle is not high enough')
-    if widest[2] < 0.9 * w: 
-        print('Warning: widest rectangle is not wide enough')
-    print('ar',ar[-1])
-    print('hr',hr[-1])
-    print('wr',wr[-1])
-    return wr[-1]
+def find_left_right_edge(hr, middle):
+    lefts = [x for x in hr if x[0] < (middle - middle*.75)]
+    rights= [x for x in hr if x[0] > (middle - middle*.75)]
+    left = find_rectangle_with_greatest_height(lefts)
+    right= find_rectangle_with_greatest_height(rights)
+    left_edge = left[0] 
+    right_edge = right[0] + right[2]
+    return left_edge, right_edge
+    
+def find_top_bottom_edge(wr, middle):
+    tops = [x for x in wr if x[0] < (middle - middle*.75)]
+    bottoms = [x for x in wr if x[0] < (middle - middle*.75)]
+    top = find_rectangle_with_greatest_height(tops)
+    bottom = find_rectangle_with_greatest_height(bottoms)
+    top_edge = top[1]
+    bottom_edge = bottom[1] + bottom[3]
+    return top_edge, bottom_edge
 
-def find_double_paper_edge(filename):
+def find_middle_with_rectangles(rectangles, rectangle, left_inward):
+    rectangle_middle = rectangle_to_horizontal_middle(rectangle)
+    central_rectangle = find_central_rectangle(rectangles, rectangle)
+    x, y, w, h = central_rectangle
+    adjust_x = left_inward + rectangle[0]
+    middle = int(x + w/2) - adjust_x
+    if abs(middle - rectangle_middle) > (rectangle_middle *.1):
+        print(x,y,w,h,middle)
+        print('middle found based on contours is not close to middle of image')
+        print('returning middle of two page rectangle')
+        middle = int(rectangle_middle) - adjust_x 
+        print(x,y,w,h,middle)
+    return middle
+
+def find_two_page_rectangle(hr, wr, image):
+    image_height, image_width = image.shape
+    horizontal_middle,vertical_middle  = image_width / 2, image_height / 2
+    heighest= hr[-1]
+    widest= wr[-1]
+    x, y, w, h = heighest
+    if h < image_height * .75: 
+        print('hight to small')
+        top_edge, bottom_edge = find_top_bottom_edge(wr, vertical_middle)
+        y = top_edge
+        h = bottom_edge - top_edge
+    if  w < image_width * .75: 
+        print('width to small')
+        left_edge, right_edge = find_left_right_edge(hr, horizontal_middle)
+        x = left_edge
+        w = right_edge - left_edge
+    return x, y, w, h
+
+def find_double_paper_edge(filename, left_inward = 10):
     image = load_image(filename)
     thresholded_image = threshold_image(image)
     contours = find_contours(thresholded_image)
     rectangles = contours_to_rectangles(contours)
-    ar= find_rectangle_with_greatest_area(rectangles, return_all = True)
     hr= find_rectangle_with_greatest_height(rectangles, return_all = True)
     wr= find_rectangle_with_greatest_width(rectangles, return_all = True)
-    rectangle = find_two_page_rectangle(ar,hr,wr, image)
-    rectangle = reduce_rectangle(rectangle, left_inward = 10)
-    central_rectangle = find_central_rectangle(rectangles, rectangle)
-    return image, rectangle, central_rectangle
+    rectangle = find_two_page_rectangle(hr,wr, image)
+    rectangle = reduce_rectangle(rectangle, left_inward = left_inward)
+    middle = find_middle_with_rectangles(rectangles, rectangle, left_inward)
+    return image, rectangle, middle
 
 def split_image_in_pages(filename):
-    image, rectangle, cr = find_double_paper_edge(filename)
-    central_rectangle = cr
-    adjust_x = 10 + rectangle[0]
+    image, rectangle, middle = find_double_paper_edge(filename)
     image = crop_image(image, rectangle)
-    # image = crop_with_rectangle(image, rectangle)
-    return _crop_with_central_rectangle(image, central_rectangle, adjust_x)
+    return _split_pages(image, middle)
 
 def plot_left_right_pages(left_page, right_page):
     plt.ion()
