@@ -27,18 +27,21 @@ def contours_to_rectangles(contours):
 def find_rectangle_with_greatest_height(rectangles, return_all = False):
     if return_all:
         return sorted(rectangles, key=lambda x: x[3])
+    if not rectangles: return None
     rectangle = sorted(rectangles, key=lambda x: x[3])[-1]
     return rectangle
 
 def find_rectangle_with_greatest_width(rectangles, return_all = False):
     if return_all:
         return sorted(rectangles, key=lambda x: x[2])
+    if not rectangles: return None
     rectangle = sorted(rectangles, key=lambda x: x[2])[-1]
     return rectangle
 
 def find_rectangle_with_greatest_area(rectangles, return_all = False):
     if return_all:
         return sorted(rectangles, key=lambda x: x[2] * x[3])
+    if not rectangles: return None
     rectangle = sorted(rectangles, key=lambda x: x[2] * x[3])[-1]
     return rectangle
 
@@ -79,7 +82,6 @@ def crop_image(image, rectangle):
 
 def show_image_with_rectangle(image, rectangle):
     img = copy.copy(image)
-    print(rectangle)
     x, y, w, h = rectangle
     cv2.rectangle(img, (x, y), (x + w, y + h), (0, 155, 0), 29)
     plt.ion()
@@ -89,7 +91,6 @@ def show_image_with_rectangle(image, rectangle):
     
 
 def crop_with_rectangle(image, rectangle = None, default_height = 600):
-    print(image,rectangle)
     if not rectangle: return image[:default_height]
     x, y, w, h = rectangle
     cropped_image = image[y:y+h, x:x+w]
@@ -108,8 +109,10 @@ def find_left_right_edge(hr, middle):
     rights= [x for x in hr if x[0] > (middle - middle*.75)]
     left = find_rectangle_with_greatest_height(lefts)
     right= find_rectangle_with_greatest_height(rights)
-    left_edge = left[0] 
-    right_edge = right[0] + right[2]
+    if not left: left_edge = None
+    else: left_edge = left[0] 
+    if not right: right_edge = None
+    else:right_edge = right[0] + right[2]
     return left_edge, right_edge
     
 def find_top_bottom_edge(wr, middle):
@@ -117,8 +120,10 @@ def find_top_bottom_edge(wr, middle):
     bottoms = [x for x in wr if x[0] < (middle - middle*.75)]
     top = find_rectangle_with_greatest_height(tops)
     bottom = find_rectangle_with_greatest_height(bottoms)
-    top_edge = top[1]
-    bottom_edge = bottom[1] + bottom[3]
+    if not top: top_edge = None
+    else: top_edge = top[1]
+    if not bottom: bottom_edge = None
+    else: bottom_edge = bottom[1] + bottom[3]
     return top_edge, bottom_edge
 
 def find_middle_with_rectangles(rectangles, rectangle, left_inward):
@@ -128,11 +133,9 @@ def find_middle_with_rectangles(rectangles, rectangle, left_inward):
     adjust_x = left_inward + rectangle[0]
     middle = int(x + w/2) - adjust_x
     if abs(middle - rectangle_middle) > (rectangle_middle *.1):
-        print(x,y,w,h,middle)
         print('middle found based on contours is not close to middle of image')
         print('returning middle of two page rectangle')
         middle = int(rectangle_middle) - adjust_x 
-        print(x,y,w,h,middle)
     return middle
 
 def find_two_page_rectangle(hr, wr, image):
@@ -144,13 +147,17 @@ def find_two_page_rectangle(hr, wr, image):
     if h < image_height * .75: 
         print('hight to small')
         top_edge, bottom_edge = find_top_bottom_edge(wr, vertical_middle)
-        y = top_edge
-        h = bottom_edge - top_edge
+        if top_edge: y = top_edge
+        else: y = 0
+        if bottom_edge and top_edge: h = bottom_edge - top_edge
+        else: h = image_height 
     if  w < image_width * .75: 
         print('width to small')
         left_edge, right_edge = find_left_right_edge(hr, horizontal_middle)
-        x = left_edge
-        w = right_edge - left_edge
+        if left_edge:x = left_edge
+        else: x = 0
+        if right_edge and left_edge: w = right_edge - left_edge
+        else: w = image_width
     return x, y, w, h
 
 def find_double_paper_edge(filename, left_inward = 10):
@@ -178,4 +185,7 @@ def plot_left_right_pages(left_page, right_page):
     plt.subplot(1,2,2)
     plt.imshow(right_page)
     plt.show()
+
+def save_image(filename, image):
+    cv2.imwrite(filename, image)
     
