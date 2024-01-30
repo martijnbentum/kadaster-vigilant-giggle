@@ -42,9 +42,12 @@ def split_data(X, y):
         stratify=y,random_state=1)
     return X_train, X_test, y_train, y_test
     
-def train_stamp_classifier(layer = 'logits'):
+def train_stamp_classifier(layer = 'logits', use_all_data = False):
     X, y = load_stamp_data()
-    X_train, X_test, y_train, y_test = split_data(X, y)
+    if use_all_data: 
+        X_train, X_test, y_train, y_test = X, X, y, y
+    else: 
+        X_train, X_test, y_train, y_test = split_data(X, y)
     clf=MLPClassifier(hidden_layer_sizes=(300,),random_state=1,max_iter=500)
     clf.fit(X_train, y_train)
     hyp = clf.predict(X_test)
@@ -60,3 +63,10 @@ def mcc(gt, hyp):
 def report(gt, hyp):
     print(classification_report(gt, hyp))
 
+
+def save_classifier(clf, filename = 'stamp_classifier.pickle'):
+    pickle.dump(clf, open(filename, 'wb'))
+
+def load_classifier(filename = 'stamp_classifier.pickle'):
+    clf = pickle.load(open(filename, 'rb'))
+    return clf
