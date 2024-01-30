@@ -35,4 +35,9 @@ all_kraken_files =  kraken_with_note_files + kraken_no_note_files
 all_kraken_files +=  kraken_with_stamp_files + kraken_no_stamp_files
 
 
-haarlem = base + 'haarlem/'
+# haarlem = base + 'haarlem/'
+haarlem_base = '/Volumes/Extreme SSD/'
+haarlem = haarlem_base + 'haarlem_input/'
+haarlem_split_pages = haarlem_base + 'split_pages/'
+haarlem_top_images = haarlem_base + 'top_images/'
+haarlem_viti_outputs = haarlem_base + 'viti_outputs/'
