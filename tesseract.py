@@ -57,12 +57,15 @@ def get_data(img, language='nld'):
 
 class Data:
     '''data structure for tesseract data'''
-    def __init__(self, filename, indices = range(200,900,100)):
+    def __init__(self, filename, indices = range(200,900,100), crop_image=True,
+        output_directory = ''):
         '''filename: path to image file
         index: height index to crop image at only the top part is needed
         '''
         self.filename = filename
         self.indices = indices
+        self.crop_image = crop_image
+        self.output_directory = output_directory
         self.name = filename.split('/')[-1].split('.')[0]
         self.header = header
         self._handle_image()
@@ -77,12 +80,17 @@ class Data:
         the scan is cropped to remove the black border 
         the scan is thresholded to enhance the text
         '''
-        self.image, self.rectangle = image_util.find_paper_edge(self.filename)
-        width = self.rectangle[2]
-        if width < 2000: 
-            self.cropped_image = copy.copy(self.image)
+        if self.crop_image:
+            self.image, self.rectangle = image_util.find_paper_edge(self.filename)
+            width = self.rectangle[2]
+            if width < 2000: 
+                self.cropped_image = copy.copy(self.image)
+            else:
+                self.cropped_image=image_util.crop_image(self.image, 
+                self.rectangle)
         else:
-            self.cropped_image=image_util.crop_image(self.image, self.rectangle)
+            self.image = image_util.load_image(self.filename)
+            self.cropped_image = copy.copy(self.image)
         self.thresholded_image=image_util.threshold_image(self.cropped_image)
 
     def _set_infos(self):
@@ -109,6 +117,8 @@ class Data:
         '''returns the type of scan based on the filename
         types: with_stamp, no_stamp, with_note, no_note
         '''
+        if 'split_pages' in self.filename:
+            return 'unknown'
         return self.filename.split('/')[-2]
         
     def show_thresholded(self, index = 600):
@@ -155,15 +165,23 @@ class Data:
             self.top_rectangle)
         return self._top_image
 
-    def save_name_and_top_image(self):
-        path = locations.cropped_name + self.scan_type + '/'
-        if not os.path.isdir(path): os.mkdir(path)
-        f = path + self.name + '.jpg'
-        cv2.imwrite(f, self.name_image)
-        path = locations.cropped_top + self.scan_type + '/'
+    def save_top_image(self):
+        if self.output_directory: path = self.output_directory
+        else: path = locations.cropped_top + self.scan_type + '/'
         if not os.path.isdir(path): os.mkdir(path)
         f = path + self.name + '.jpg'
         cv2.imwrite(f, self.top_image)
+
+    def save_name_image(self):
+        if self.output_directory: path = self.output_directory
+        else:path = locations.cropped_name + self.scan_type + '/'
+        if not os.path.isdir(path): os.mkdir(path)
+        f = path + self.name + '.jpg'
+        cv2.imwrite(f, self.name_image)
+
+    def save_name_and_top_image(self):
+        self.save_name_image()
+        self.save_top_image()
 
     
 
