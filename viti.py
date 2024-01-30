@@ -11,6 +11,11 @@ def load_model(name = 'google/vit-base-patch16-224'):
     model = ViTForImageClassification.from_pretrained(name)
     return model
 
+def load_processor_and_model(name = 'google/vit-base-patch16-224'):
+    processor = load_processor(name)
+    model = load_model(name)
+    return processor, model
+
 def process_image(processor, image):
     if hasattr(image,'shape'): 
         if len(image.shape) == 2: image = to_color_image(image)
