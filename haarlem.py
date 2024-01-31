@@ -153,6 +153,12 @@ def load_classifications():
         classifications= f.read().split('\n')
     return classifications
 
+def _count_batched_filenames(batched_filenames):
+    count = 0
+    for batch in batched_filenames:
+        count += len(batch)
+    return count
+
 def classify_all_pages(filenames = None):
     '''classifies all pages with the stamp classifier
     the classification results are written to a classification log file
@@ -163,6 +169,8 @@ def classify_all_pages(filenames = None):
     filenames = exclude_done_filenames(filenames)
     print('n files to do:', len(filenames))
     batched_filenames = batch_viti_filenames(filenames)
+    print('n batches:', len(batched_filenames), 'n files:',
+        _count_batched_filenames(batched_filenames))
     clf = perceptron.load_classifier()
     for batch in progressbar(batched_filenames):
         output = classify(batch, clf)
