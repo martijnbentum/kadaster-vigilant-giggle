@@ -41,3 +41,18 @@ haarlem = haarlem_base + 'haarlem_input/'
 haarlem_split_pages = haarlem_base + 'split_pages/'
 haarlem_top_images = haarlem_base + 'top_images/'
 haarlem_viti_outputs = haarlem_base + 'viti_outputs/'
+haarlem_classified = haarlem_base + 'classified/'
+haarlem_with_stamp = haarlem_classified + 'with_stamp/'
+haarlem_no_stamp = haarlem_classified + 'no_stamp/'
+haarlem_top_with_stamp = haarlem_classified + 'top/with_stamp/'
+haarlem_top_no_stamp = haarlem_classified + 'top/no_stamp/'
+
+if haarlem_base:
+    fn_log = haarlem_base + 'log.tsv'
+    fn_classification = haarlem_base + 'classification.log'
+    fn_log_classification = haarlem_base + 'log_classification.json'
+else:
+    fn_log = base + 'log.tsv'
+    fn_classification = base + 'classification.log'
+    fn_log_classification = base + 'log_classification.json'
+    
